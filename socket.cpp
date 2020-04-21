@@ -80,6 +80,30 @@ bool sendData(int fd, void* data, int len)
     return true;
 }
 
+
+bool sendDataSSL(SSL* fd, void* data, int len)
+{
+    char* ptr = (char*)data;
+
+    while (len > 0)
+    {
+        int sent = SSL_write(fd, ptr, len);
+        if (sent <= 0)
+        {
+            printf("send() error:");
+            return false;
+        }
+        ptr += sent;
+        len -= sent;
+    }
+
+    return true;
+}
+
+
+
+
+
 int recvData(int fd, void* data, int len, bool disconnectOk = false)
 {
     char* ptr = (char*)data;
@@ -88,6 +112,35 @@ int recvData(int fd, void* data, int len, bool disconnectOk = false)
     while (len > 0)
     {
         int recvd = recv(fd, ptr, len, 0);
+        if (recvd < 0)
+        {
+            printf("recv() error");
+            return -1;
+        }
+        if (recvd == 0)
+        {
+            if (disconnectOk)
+                break;
+            printf("disconnected");
+            return -1;
+        }
+        ptr += recvd;
+        len -= recvd;
+        total -= recvd;
+    }
+
+    return total;
+}
+
+
+int recvDataSSL(SSL* fd, void* data, int len, bool disconnectOk = false)
+{
+    char* ptr = (char*)data;
+    int total = 0;
+
+    while (len > 0)
+    {
+        int recvd = SSL_read(fd, ptr, len);
         if (recvd < 0)
         {
             printf("recv() error");
@@ -292,6 +345,69 @@ void ShowCerts(SSL* ssl)
         printf("No certificates.\n");
 }
 
+int connectHttp(int s)
+{
+    std::stringstream ss;
+    ss<< "GET http://35.240.177.81/ HTTP/1.1\r\nHost: 35.240.177.81\r\n"
+      << "Connection: keep-alive\r\nUpgrade-Insecure-Requests: 1\r\n"
+      << "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36\r\n"
+      << "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
+      << "Accept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.9\r\n\r\n";
+    std::string str = ss.str();
+    char * query = new char[str.length()];
+    strcpy(query, str.c_str());
+    if (!sendData(s, query, strlen(query)))
+    {
+        return 0;
+    }
+    char result[4000];
+    if (!recvData(s, result, 4000))
+    {
+        return 0;
+    }
+    else
+    {
+        puts("\n");
+        puts(result);
+    }
+    return 0;
+}
+
+int connectHTTPS(SSL* s)
+{
+    std::stringstream ss;
+    ss<<  "GET https://www.google.com/?gws_rd=ssl HTTP/1.1\r\n"
+      <<"Host: www.google.com\r\n"
+      <<"Connection: keep-alive\r\n"
+      <<"Upgrade-Insecure-Requests: 1\r\n"
+      <<"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36\r\n"
+      <<"Sec-Fetch-Site: none\r\n"
+      <<"Sec-Fetch-Mode: navigate\r\n"
+      <<"Sec-Fetch-User: ?1\r\n"
+      <<"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
+      <<"Accept-Encoding: gzip, deflate\r\n"
+      <<"Accept-Language: en-US,en;q=0.9\r\n\r\n";
+
+    std::string str = ss.str();
+    char * query = new char[str.length()];
+    strcpy(query, str.c_str());
+    if (!sendDataSSL(s, query, strlen(query)))
+    {
+        return 0;
+    }
+    char result[8000];
+    if (!recvDataSSL(s, result, 8000))
+    {
+        return 0;
+    }
+    else
+    {
+        puts("\n");
+        puts(result);
+    }
+    return 0;
+
+}
 
 int main()
 {
@@ -320,49 +436,28 @@ int main()
         return 1;
     }
     struct sockaddr_in sa;
-    inet_pton(AF_INET, "35.240.177.81", &(sa.sin_addr));
-    if (!socksConnect(s, sa.sin_addr, 80))
+    inet_pton(AF_INET, "172.217.164.142", &(sa.sin_addr));
+    if (!socksConnect(s, sa.sin_addr, 443))
         return 1;
 
     SSL_CTX *ctx;
     SSL *ssl;
     ctx = InitCTX();
     ssl = SSL_new(ctx);
-//    SSL_set_fd(ssl, s);
-//    if ( SSL_connect(ssl) == FAIL )
-//    {
-//        ERR_print_errors_fp(stderr);
-//    }
-//    else
-//    {
+    SSL_set_fd(ssl, s);
+    if ( SSL_connect(ssl) == FAIL )
+    {
+        ERR_print_errors_fp(stderr);
+    }
+    else
+    {
         puts("ssl success");
-        std::stringstream ss;
-        ss<< "GET http://35.240.177.81/ HTTP/1.1\r\nHost: 35.240.177.81\r\n"
-          << "Connection: keep-alive\r\nUpgrade-Insecure-Requests: 1\r\n"
-          << "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36\r\n"
-          << "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
-          << "Accept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.9\r\n\r\n";
-        std::string str = ss.str();
-        char * query = new char[str.length()];
-        strcpy(query, str.c_str());
-        if (!sendData(s, query, strlen(query)))
-        {
-            return 0;
-        }
-        char result[4000];
-        if (!recvData(s, result, 4000))
-        {
-            return 0;
-        }
-        else
-        {
-            puts("\n");
-            puts(result);
-        }
+        printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
+        ShowCerts(ssl);
+        connectHTTPS(ssl);
 
-//    }
-
-
+    }
+//    connectHttp(s);
     return 0;
 }
 
