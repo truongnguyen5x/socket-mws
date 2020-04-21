@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <cstring>
-
+#include <sstream>
 
 struct socks5_ident_req
 {
@@ -276,9 +276,15 @@ int main()
     inet_pton(AF_INET, "35.240.177.81", &(sa.sin_addr));
     if (!socksConnect(s, sa.sin_addr, 80))
         return 1;
-
-    char* query = "GET http://35.240.177.81/ HTTP/1.1\r\nHost: 35.240.177.81\r\nConnection: keep-alive\r\nUpgrade-Insecure-Requests: 1\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.9\r\n\r\n";
-
+    std::stringstream ss;
+    ss<< "GET http://35.240.177.81/ HTTP/1.1\r\nHost: 35.240.177.81\r\n"
+      << "Connection: keep-alive\r\nUpgrade-Insecure-Requests: 1\r\n"
+      << "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36\r\n"
+      << "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
+      << "Accept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.9\r\n\r\n";
+    std::string str = ss.str();
+    char * query = new char[str.length()];
+    strcpy(query, str.c_str());
     if (!sendData(s, query, strlen(query)))
     {
         return 0;
