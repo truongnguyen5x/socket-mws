@@ -127,14 +127,6 @@ bool socksLogin(SOCKET fd)
 		printf("SOCKS v5 authentication failed");
 		return false;
 	}
-
-	/*
-	if (resp.Method != 0x00)
-	{
-		// authenticate as needed...
-	}
-	*/
-
 	return true;
 }
 
@@ -248,11 +240,15 @@ bool socksConnect(SOCKET fd, in_addr& dest, unsigned short port)
 		printf("SOCKS v5 connect failed, error: 0x%02X", resp.Reply);
 		return false;
 	}
-	else {
-		printf("Socks v5 establised ");
-	}
-
 	return true;
+}
+
+
+in_addr convertIPv4(char* ipv4) {
+	struct in_addr paddr;
+	DWORD ip = inet_addr(ipv4);
+	paddr.S_un.S_addr = ip;
+	return paddr;
 }
 
 int main()
@@ -278,7 +274,7 @@ int main()
 
 	server.sin_addr.s_addr = inet_addr("127.0.0.1");
 	server.sin_family = AF_INET;
-	server.sin_port = htons(5001);
+	server.sin_port = htons(5000);
 
 	//Connect to remote server
 	if (connect(s, (struct sockaddr*) & server, sizeof(server)) < 0)
@@ -289,20 +285,12 @@ int main()
 	if (!socksLogin(s)) {
 		return 1;
 	}
-	else {
-		puts("done");
-	}
 
-	struct in_addr paddr;
-	DWORD ip = inet_addr("35.240.177.81");
-	paddr.S_un.S_addr = ip;
-	if (!socksConnect(s, paddr, 80))
+	if (!socksConnect(s, convertIPv4("35.240.177.81"), 80))
 		return 1;
 
-	printf("Success! Suceess");
-
 	char* query = "GET http://35.240.177.81/ HTTP/1.1\r\nHost: 35.240.177.81\r\nConnection: keep-alive\r\nUpgrade-Insecure-Requests: 1\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\nAccept-Encoding: gzip, deflate\r\nAccept-Language: en-US,en;q=0.9\r\n\r\n";
-		
+
 	if (!sendData(s, query, strlen(query))) {
 		return 0;
 	}
@@ -311,10 +299,9 @@ int main()
 		return 0;
 	}
 	else {
+		puts("\n");
 		puts(result);
 	}
-
-	// now send/receive desired data as needed using existing fd ...
 
 	return 0;
 }
