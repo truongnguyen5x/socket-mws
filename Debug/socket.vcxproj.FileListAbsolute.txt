@@ -1,2 +1,0 @@
-C:\Users\kairon\Documents\socket\socket\Debug\socket.exe
-C:\Users\kairon\Documents\socket\socket\Debug\socket.pdb
