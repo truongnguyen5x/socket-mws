@@ -60,7 +60,7 @@ struct socks5_resp
     unsigned short BindPort;
 };
 
-
+// send data to socket with length
 bool sendData(int fd, void* data, int len)
 {
     char* ptr = (char*)data;
@@ -81,6 +81,7 @@ bool sendData(int fd, void* data, int len)
 }
 
 
+// send data wrap with SSL
 bool sendDataSSL(SSL* fd, void* data, int len)
 {
     char* ptr = (char*)data;
@@ -100,10 +101,7 @@ bool sendDataSSL(SSL* fd, void* data, int len)
     return true;
 }
 
-
-
-
-
+// receive data from socket
 int recvData(int fd, void* data, int len, bool disconnectOk = false)
 {
     char* ptr = (char*)data;
@@ -161,6 +159,7 @@ int recvDataSSL(SSL* fd, void* data, int len, bool disconnectOk = false)
     return total;
 }
 
+
 bool socksLogin(int fd)
 {
     socks5_ident_req req;
@@ -191,6 +190,7 @@ bool socksLogin(int fd)
     return true;
 }
 
+// ask socks5 server to connect other ip
 bool socksRequest(int fd, const socks5_req& req, socks5_resp& resp)
 {
     if (!sendData(fd, (void*)&req, 4))
@@ -279,6 +279,7 @@ bool socksRequest(int fd, const socks5_req& req, socks5_resp& resp)
     return true;
 }
 
+// send hello to socks5 server
 bool socksConnect(int fd, in_addr& dest, unsigned short port)
 {
     socks5_req req;
@@ -345,6 +346,7 @@ void ShowCerts(SSL* ssl)
         printf("No certificates.\n");
 }
 
+// connect and receive data in http
 int connectHttp(int s)
 {
     std::stringstream ss;
@@ -373,6 +375,7 @@ int connectHttp(int s)
     return 0;
 }
 
+// connect and receive data in SSL
 int connectHTTPS(SSL* s)
 {
     std::stringstream ss;
@@ -395,8 +398,8 @@ int connectHTTPS(SSL* s)
     {
         return 0;
     }
-    char result[8000];
-    if (!recvDataSSL(s, result, 8000))
+    char result[56000];
+    if (!recvDataSSL(s, result, 56000))
     {
         return 0;
     }
@@ -406,58 +409,80 @@ int connectHTTPS(SSL* s)
         puts(result);
     }
     return 0;
-
 }
 
-int main()
+int initSocketSession(int socket, char * addr, int port)
 {
-    int s;
     struct sockaddr_in server;
-    printf("\nInitialising Winsock...");
-    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        printf("Could not create socket ");
-    }
-
-    printf("Socket created.\n");
-
-    server.sin_addr.s_addr = inet_addr("192.168.3.5");
+    server.sin_addr.s_addr = inet_addr(addr);
     server.sin_family = AF_INET;
-    server.sin_port = htons(5000);
-
+    server.sin_port = htons(port);
     //Connect to remote server
-    if (connect(s, (struct sockaddr*) & server, sizeof(server)) < 0)
+    if (connect(socket, (struct sockaddr*) & server, sizeof(server)) < 0)
     {
         puts("connect error");
-        return 1;
+        return -1;
     }
-    if (!socksLogin(s))
+    return 1;
+}
+
+int socks5Session(int socket, char * addr, int port)
+{
+    if (!socksLogin(socket))
     {
-        return 1;
+        return -1;
     }
     struct sockaddr_in sa;
-    inet_pton(AF_INET, "172.217.164.142", &(sa.sin_addr));
-    if (!socksConnect(s, sa.sin_addr, 443))
-        return 1;
+    inet_pton(AF_INET, addr, &(sa.sin_addr));
+    if (!socksConnect(socket, sa.sin_addr, port))
+        return -1;
+    return 1;
+}
 
+int initSSLSession(int socket, SSL* &ssl)
+{
     SSL_CTX *ctx;
-    SSL *ssl;
     ctx = InitCTX();
     ssl = SSL_new(ctx);
-    SSL_set_fd(ssl, s);
+    SSL_set_fd(ssl, socket);
     if ( SSL_connect(ssl) == FAIL )
     {
         ERR_print_errors_fp(stderr);
+        return -1;
     }
     else
     {
         puts("ssl success");
         printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
         ShowCerts(ssl);
-        connectHTTPS(ssl);
-
+        return 1;
     }
-//    connectHttp(s);
+}
+
+int main()
+{
+    int s;
+    printf("\nInitialising Winsock...");
+    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("Could not create socket ");
+    }
+    printf("Socket created.\n");
+    char socks5ip[] = "192.168.3.5";
+    if (!initSocketSession(s, socks5ip, 5000))
+    {
+        return -1;
+    }
+    char address[] = "172.217.5.238";
+    if (!socks5Session(s, address, 443))
+    {
+        return -1;
+    }
+    SSL *ssl;
+    if (!initSSLSession(s, ssl)) {
+        return -1;
+    }
+    connectHTTPS(ssl);
     return 0;
 }
 
