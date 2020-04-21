@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1587454306 source:/home/kairon/Documents/mws/socket.cpp
+	<arpa/inet.h>
+	<stdio.h>
+	<sys/socket.h>
+	<stdlib.h>
+	<cstring>
+
