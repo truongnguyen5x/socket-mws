@@ -37,10 +37,10 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="main.cpp" />
+		<Unit filename="mws.h" />
 		<Unit filename="request.cpp" />
 		<Unit filename="session.cpp" />
 		<Unit filename="socket.cpp" />
-		<Unit filename="socket.h" />
 		<Unit filename="socks5.cpp" />
 		<Unit filename="ssl.cpp" />
 		<Extensions>
