@@ -36,7 +36,13 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="main.cpp" />
+		<Unit filename="request.cpp" />
+		<Unit filename="session.cpp" />
 		<Unit filename="socket.cpp" />
+		<Unit filename="socket.h" />
+		<Unit filename="socks5.cpp" />
+		<Unit filename="ssl.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />
