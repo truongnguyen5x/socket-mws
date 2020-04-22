@@ -71,7 +71,7 @@ bool sendData(int fd, void* data, int len)
         int sent = send(fd, ptr, len, 0);
         if (sent <= 0)
         {
-            printf("send() error:");
+            printf("send socket error");
             return false;
         }
         ptr += sent;
@@ -92,7 +92,7 @@ bool sendDataSSL(SSL* fd, void* data, int len)
         int sent = SSL_write(fd, ptr, len);
         if (sent <= 0)
         {
-            printf("send() error:");
+            printf("send ssl/tls error");
             return false;
         }
         ptr += sent;
@@ -471,27 +471,26 @@ void cleanup (int soc, SSL * ssl, SSL_CTX * ctx)
 int main()
 {
     int soc;
-    printf("\nInitialising Winsock...");
+    SSL *ssl;
+    SSL_CTX *ctx;
     if ((soc = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("Could not create socket ");
+        return FAIL;
     }
-    printf("Socket created.\n");
     char socks5ip[] = "192.168.3.5";
-    if (!initSocketSession(soc, socks5ip, 5000))
+    if (!initSocketSession(soc, socks5ip, 34974))
     {
-        return -1;
+        return FAIL;
     }
     char address[] = "172.217.5.238";
     if (!socks5Session(soc, address, 443))
     {
-        return -1;
+        return FAIL;
     }
-    SSL *ssl;
-    SSL_CTX *ctx;
     if (!initSSLSession(soc, ssl, ctx))
     {
-        return -1;
+        return FAIL;
     }
     connectHTTPS(ssl);
     cleanup(soc, ssl, ctx);
