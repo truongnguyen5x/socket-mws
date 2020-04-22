@@ -62,13 +62,13 @@ struct socks5_resp
 };
 
 // send data to socket with length
-bool sendData(int fd, void* data, int len)
+bool sendData(int soc, void* data, int len)
 {
     char* ptr = (char*)data;
 
     while (len > 0)
     {
-        int sent = send(fd, ptr, len, 0);
+        int sent = send(soc, ptr, len, 0);
         if (sent <= 0)
         {
             printf("send socket error");
@@ -83,13 +83,13 @@ bool sendData(int fd, void* data, int len)
 
 
 // send data wrap with SSL
-bool sendDataSSL(SSL* fd, void* data, int len)
+bool sendDataSSL(SSL* ssl, void* data, int len)
 {
     char* ptr = (char*)data;
 
     while (len > 0)
     {
-        int sent = SSL_write(fd, ptr, len);
+        int sent = SSL_write(ssl, ptr, len);
         if (sent <= 0)
         {
             printf("send ssl/tls error");
@@ -103,58 +103,44 @@ bool sendDataSSL(SSL* fd, void* data, int len)
 }
 
 // receive data from socket
-int recvData(int fd, void* data, int len, bool disconnectOk = false)
+int recvData(int soc, void* data, int len)
 {
     char* ptr = (char*)data;
     int total = 0;
 
     while (len > 0)
     {
-        int recvd = recv(fd, ptr, len, 0);
+        int recvd = recv(soc, ptr, len, 0);
         if (recvd < 0)
         {
-            printf("recv() error");
-            return -1;
-        }
-        if (recvd == 0)
-        {
-            if (disconnectOk)
-                break;
-            printf("disconnected");
-            return -1;
+            printf("recv socket error");
+            return FAIL;
         }
         ptr += recvd;
         len -= recvd;
-        total -= recvd;
+        total += recvd;
     }
 
     return total;
 }
 
 
-int recvDataSSL(SSL* fd, void* data, int len, bool disconnectOk = false)
+int recvDataSSL(SSL* ssl, void* data, int len)
 {
     char* ptr = (char*)data;
     int total = 0;
 
     while (len > 0)
     {
-        int recvd = SSL_read(fd, ptr, len);
+        int recvd = SSL_read(ssl, ptr, len);
         if (recvd < 0)
         {
-            printf("recv() error");
-            return -1;
-        }
-        if (recvd == 0)
-        {
-            if (disconnectOk)
-                break;
-            printf("disconnected");
-            return -1;
+            printf("recv ssl/tls error");
+            return FAIL;
         }
         ptr += recvd;
         len -= recvd;
-        total -= recvd;
+        total += recvd;
     }
 
     return total;
@@ -192,33 +178,33 @@ bool socksLogin(int fd)
 }
 
 // ask socks5 server to connect other ip
-bool socksRequest(int fd, const socks5_req& req, socks5_resp& resp)
+bool socksRequest(int soc, const socks5_req& req, socks5_resp& resp)
 {
-    if (!sendData(fd, (void*)&req, 4))
+    if (!sendData(soc, (void*)&req, 4))
         return false;
 
     switch (req.AddrType)
     {
     case 1:
     {
-        if (!sendData(fd, (void*)&(req.DestAddr.IPv4), sizeof(in_addr)))
+        if (!sendData(soc, (void*)&(req.DestAddr.IPv4), sizeof(in_addr)))
             return false;
 
         break;
     }
     case 3:
     {
-        if (!sendData(fd, (void*)&(req.DestAddr.DomainLen), 1))
+        if (!sendData(soc, (void*)&(req.DestAddr.DomainLen), 1))
             return false;
 
-        if (!sendData(fd, (void*)req.DestAddr.Domain, req.DestAddr.DomainLen))
+        if (!sendData(soc, (void*)req.DestAddr.Domain, req.DestAddr.DomainLen))
             return false;
 
         break;
     }
     case 4:
     {
-        if (!sendData(fd, (void*)&(req.DestAddr.IPv6), sizeof(in6_addr)))
+        if (!sendData(soc, (void*)&(req.DestAddr.IPv6), sizeof(in6_addr)))
             return false;
 
         break;
@@ -232,34 +218,34 @@ bool socksRequest(int fd, const socks5_req& req, socks5_resp& resp)
     }
 
     unsigned short port = htons(req.DestPort);
-    if (!sendData(fd, &port, 2))
+    if (!sendData(soc, &port, 2))
         return false;
 
-    if (recvData(fd, &resp, 4) == -1)
+    if (recvData(soc, &resp, 4) == -1)
         return false;
 
     switch (resp.AddrType)
     {
     case 1:
     {
-        if (recvData(fd, &(resp.BindAddr.IPv4), sizeof(in_addr)) == -1)
+        if (recvData(soc, &(resp.BindAddr.IPv4), sizeof(in_addr)) == -1)
             return false;
 
         break;
     }
     case 3:
     {
-        if (recvData(fd, &(resp.BindAddr.DomainLen), 1) == -1)
+        if (recvData(soc, &(resp.BindAddr.DomainLen), 1) == -1)
             return false;
 
-        if (recvData(fd, resp.BindAddr.Domain, resp.BindAddr.DomainLen) == -1)
+        if (recvData(soc, resp.BindAddr.Domain, resp.BindAddr.DomainLen) == -1)
             return false;
 
         break;
     }
     case 4:
     {
-        if (recvData(fd, &(resp.BindAddr.IPv6), sizeof(in6_addr)) == -1)
+        if (recvData(soc, &(resp.BindAddr.IPv6), sizeof(in6_addr)) == -1)
             return false;
 
         break;
@@ -272,7 +258,7 @@ bool socksRequest(int fd, const socks5_req& req, socks5_resp& resp)
     }
     }
 
-    if (recvData(fd, &port, 2, 0) == -1)
+    if (recvData(soc, &port, 2) == -1)
         return false;
 
     resp.BindPort = ntohs(port);
@@ -281,7 +267,7 @@ bool socksRequest(int fd, const socks5_req& req, socks5_resp& resp)
 }
 
 // send hello to socks5 server
-bool socksConnect(int fd, in_addr& dest, unsigned short port)
+bool socksConnect(int soc, in_addr& dest, unsigned short port)
 {
     socks5_req req;
     socks5_resp resp;
@@ -293,7 +279,7 @@ bool socksConnect(int fd, in_addr& dest, unsigned short port)
     req.DestAddr.IPv4 = dest;
     req.DestPort = port;
 
-    if (!socksRequest(fd, req, resp))
+    if (!socksRequest(soc, req, resp))
         return false;
 
     if (resp.Reply != 0x00)
@@ -377,7 +363,7 @@ int connectHttp(int s)
 }
 
 // connect and receive data in SSL
-int connectHTTPS(SSL* s)
+int connectHTTPS(SSL* ssl)
 {
     std::stringstream ss;
     ss<<  "GET https://www.google.com/?gws_rd=ssl HTTP/1.1\r\n"
@@ -391,16 +377,15 @@ int connectHTTPS(SSL* s)
       <<"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
       <<"Accept-Encoding: gzip, deflate\r\n"
       <<"Accept-Language: en-US,en;q=0.9\r\n\r\n";
-
     std::string str = ss.str();
     char * query = new char[str.length()];
     strcpy(query, str.c_str());
-    if (!sendDataSSL(s, query, strlen(query)))
+    if (!sendDataSSL(ssl, query, strlen(query)))
     {
         return 0;
     }
     char result[56000];
-    if (!recvDataSSL(s, result, 56000))
+    if (!recvDataSSL(ssl, result, 56000))
     {
         return 0;
     }
@@ -418,46 +403,45 @@ int initSocketSession(int socket, char * addr, int port)
     server.sin_addr.s_addr = inet_addr(addr);
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
-    //Connect to remote server
     if (connect(socket, (struct sockaddr*) & server, sizeof(server)) < 0)
     {
-        puts("connect error");
-        return -1;
+        return FAIL;
     }
     return 1;
 }
 
-int socks5Session(int socket, char * addr, int port)
+int socks5Session(int soc, char * addr, int port)
 {
-    if (!socksLogin(socket))
+    if (!socksLogin(soc))
     {
-        return -1;
+        return FAIL;
     }
     struct sockaddr_in sa;
     inet_pton(AF_INET, addr, &(sa.sin_addr));
-    if (!socksConnect(socket, sa.sin_addr, port))
-        return -1;
+    if (!socksConnect(soc, sa.sin_addr, port))
+        return FAIL;
     return 1;
 }
 
-int initSSLSession(int socket, SSL* &ssl,SSL_CTX *ctx)
+int initSSLSession(int soc, SSL* &ssl,SSL_CTX *ctx)
 {
     ctx = InitCTX();
     ssl = SSL_new(ctx);
-    SSL_set_fd(ssl, socket);
+    SSL_set_fd(ssl, soc);
     if ( SSL_connect(ssl) == FAIL )
     {
         ERR_print_errors_fp(stderr);
-        return -1;
+        return FAIL;
     }
     else
     {
-        puts("ssl success");
         printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
         ShowCerts(ssl);
         return 1;
     }
 }
+
+
 void cleanup (int soc, SSL * ssl, SSL_CTX * ctx)
 {
     SSL_shutdown(ssl);
@@ -475,7 +459,6 @@ int main()
     SSL_CTX *ctx;
     if ((soc = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        printf("Could not create socket ");
         return FAIL;
     }
     char socks5ip[] = "192.168.3.5";
