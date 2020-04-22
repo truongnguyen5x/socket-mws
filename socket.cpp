@@ -147,7 +147,7 @@ int recvDataSSL(SSL* ssl, void* data, int len)
 }
 
 
-bool socksLogin(int fd)
+bool socksLogin(int soc)
 {
     socks5_ident_req req;
     socks5_ident_resp resp;
@@ -157,10 +157,10 @@ bool socksLogin(int fd)
     req.Methods[0] = 0x00;
     // add other methods as needed...
 
-    if (!sendData(fd, &req, 2 + req.NumberOfMethods))
+    if (!sendData(soc, &req, 2 + req.NumberOfMethods))
         return false;
 
-    if (recvData(fd, &resp, sizeof(resp)) == -1)
+    if (recvData(soc, &resp, sizeof(resp)) == -1)
         return false;
 
     if (resp.Version != 5)
@@ -334,7 +334,7 @@ void ShowCerts(SSL* ssl)
 }
 
 // connect and receive data in http
-int connectHttp(int s)
+int connectHttp(int soc)
 {
     std::stringstream ss;
     ss<< "GET http://35.240.177.81/ HTTP/1.1\r\nHost: 35.240.177.81\r\n"
@@ -345,12 +345,12 @@ int connectHttp(int s)
     std::string str = ss.str();
     char * query = new char[str.length()];
     strcpy(query, str.c_str());
-    if (!sendData(s, query, strlen(query)))
+    if (!sendData(soc, query, strlen(query)))
     {
         return 0;
     }
     char result[4000];
-    if (!recvData(s, result, 4000))
+    if (!recvData(soc, result, 4000))
     {
         return 0;
     }
@@ -397,13 +397,13 @@ int connectHTTPS(SSL* ssl)
     return 0;
 }
 
-int initSocketSession(int socket, char * addr, int port)
+int initSocketSession(int soc, char * addr, int port)
 {
     struct sockaddr_in server;
     server.sin_addr.s_addr = inet_addr(addr);
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
-    if (connect(socket, (struct sockaddr*) & server, sizeof(server)) < 0)
+    if (connect(soc, (struct sockaddr*) & server, sizeof(server)) < 0)
     {
         return FAIL;
     }
