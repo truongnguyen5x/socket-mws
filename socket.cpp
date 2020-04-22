@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <cstring>
 #include <sstream>
+#include <unistd.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #define FAIL    -1
@@ -439,9 +440,8 @@ int socks5Session(int socket, char * addr, int port)
     return 1;
 }
 
-int initSSLSession(int socket, SSL* &ssl)
+int initSSLSession(int socket, SSL* &ssl,SSL_CTX *ctx)
 {
-    SSL_CTX *ctx;
     ctx = InitCTX();
     ssl = SSL_new(ctx);
     SSL_set_fd(ssl, socket);
@@ -458,31 +458,43 @@ int initSSLSession(int socket, SSL* &ssl)
         return 1;
     }
 }
+void cleanup (int soc, SSL * ssl, SSL_CTX * ctx)
+{
+    SSL_shutdown(ssl);
+    SSL_free(ssl);
+    close(soc);
+    SSL_CTX_free(ctx);
+    EVP_cleanup();
+}
+
 
 int main()
 {
-    int s;
+    int soc;
     printf("\nInitialising Winsock...");
-    if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    if ((soc = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("Could not create socket ");
     }
     printf("Socket created.\n");
     char socks5ip[] = "192.168.3.5";
-    if (!initSocketSession(s, socks5ip, 5000))
+    if (!initSocketSession(soc, socks5ip, 5000))
     {
         return -1;
     }
     char address[] = "172.217.5.238";
-    if (!socks5Session(s, address, 443))
+    if (!socks5Session(soc, address, 443))
     {
         return -1;
     }
     SSL *ssl;
-    if (!initSSLSession(s, ssl)) {
+    SSL_CTX *ctx;
+    if (!initSSLSession(soc, ssl, ctx))
+    {
         return -1;
     }
     connectHTTPS(ssl);
+    cleanup(soc, ssl, ctx);
     return 0;
 }
 
