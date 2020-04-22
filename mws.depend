@@ -6,8 +6,8 @@
 	<stdlib.h>
 	<cstring>
 
-1587578706 source:/home/kairon/Documents/socket-mws/socket.cpp
-	"socket.h"
+1587579777 source:/home/kairon/Documents/socket-mws/socket.cpp
+	"mws.h"
 
 1587579095 /home/kairon/Documents/socket-mws/socket.h
 	<arpa/inet.h>
@@ -21,18 +21,30 @@
 	<openssl/err.h>
 	<iostream>
 
-1587579069 source:/home/kairon/Documents/socket-mws/session.cpp
-	"socket.h"
+1587579777 source:/home/kairon/Documents/socket-mws/session.cpp
+	"mws.h"
 
-1587578514 source:/home/kairon/Documents/socket-mws/socks5.cpp
-	"socket.h"
+1587579777 source:/home/kairon/Documents/socket-mws/socks5.cpp
+	"mws.h"
 
-1587579090 source:/home/kairon/Documents/socket-mws/main.cpp
-	"socket.h"
+1587579777 source:/home/kairon/Documents/socket-mws/main.cpp
+	"mws.h"
 
-1587579088 source:/home/kairon/Documents/socket-mws/request.cpp
-	"socket.h"
+1587579777 source:/home/kairon/Documents/socket-mws/request.cpp
+	"mws.h"
 
-1587579068 source:/home/kairon/Documents/socket-mws/ssl.cpp
-	"socket.h"
+1587579777 source:/home/kairon/Documents/socket-mws/ssl.cpp
+	"mws.h"
+
+1587579777 /home/kairon/Documents/socket-mws/mws.h
+	<arpa/inet.h>
+	<stdio.h>
+	<sys/socket.h>
+	<stdlib.h>
+	<cstring>
+	<sstream>
+	<unistd.h>
+	<openssl/ssl.h>
+	<openssl/err.h>
+	<iostream>
 
