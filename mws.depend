@@ -27,16 +27,16 @@
 1587614379 source:/home/kairon/Documents/socket-mws/socks5.cpp
 	"mws.h"
 
-1587638452 source:/home/kairon/Documents/socket-mws/main.cpp
+1587648711 source:/home/kairon/Documents/socket-mws/main.cpp
 	"mws.h"
 
-1587614604 source:/home/kairon/Documents/socket-mws/request.cpp
+1587648742 source:/home/kairon/Documents/socket-mws/request.cpp
 	"mws.h"
 
-1587614421 source:/home/kairon/Documents/socket-mws/ssl.cpp
+1587641140 source:/home/kairon/Documents/socket-mws/ssl.cpp
 	"mws.h"
 
-1587614492 /home/kairon/Documents/socket-mws/mws.h
+1587640101 /home/kairon/Documents/socket-mws/mws.h
 	<arpa/inet.h>
 	<stdio.h>
 	<sys/socket.h>

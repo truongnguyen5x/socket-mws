@@ -72,7 +72,7 @@ int initSocketSession(int soc, char * addr, int port);
 int initSslSession(int soc, SSL* &ssl,SSL_CTX *ctx);
 void cleanup (int soc, SSL * ssl, SSL_CTX * ctx);
 int sendDataSSL(SSL* ssl, void* data, int len);
-int recvDataSSL(SSL* ssl, void* data, int len);
+int recvDataSSL(SSL* ssl, void* data, long len);
 int recvPacket(SSL * ssl);
 void log_ssl();
 void showCertificate(SSL* ssl);

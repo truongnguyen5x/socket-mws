@@ -47,7 +47,7 @@ int connectHTTPS(SSL* ssl)
       <<"Sec-Fetch-Mode: navigate\r\n"
       <<"Sec-Fetch-User: ?1\r\n"
       <<"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
-      <<"Accept-Encoding: gzip, deflate\r\n"
+//      <<"Accept-Encoding: gzip, deflate\r\n"
       <<"Accept-Language: en-US,en;q=0.9\r\n\r\n";
     std::string str = ss.str();
     char * query = new char[str.length()];
@@ -60,6 +60,8 @@ int connectHTTPS(SSL* ssl)
     }
     std::cout<<"\n Request receive: \n" << std::endl;
     recvPacket(ssl);
+    char data[100000];
+    recvDataSSL(ssl, data, 100000l);
     return 0;
 }
 

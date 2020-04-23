@@ -32,7 +32,7 @@ int sendDataSSL(SSL* ssl, void* data, int len)
     return 1;
 }
 
-int recvDataSSL(SSL* ssl, void* data, int len)
+int recvDataSSL(SSL* ssl, void* data, long len)
 {
     char* ptr = (char*)data;
     int total = 0;
@@ -49,7 +49,7 @@ int recvDataSSL(SSL* ssl, void* data, int len)
         len -= recvd;
         total += recvd;
     }
-
+    ptr[total] = '\0';
     return total;
 }
 
@@ -122,7 +122,7 @@ void showCertificate(SSL* ssl)
 int recvPacket(SSL * ssl)
 {
     int len=100;
-    char buf[1000000];
+    char buf[110];
     do
     {
         len=SSL_read(ssl, buf, 100);
