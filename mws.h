@@ -67,12 +67,10 @@ struct socks5_resp
 
 bool sendData(int soc, void* data, int len);
 int recvData(int soc, void* data, int len);
-
 int initSocketSession(int soc, char * addr, int port);
-int initSocks5Session(int soc, char * addr, int port);
+
 int initSslSession(int soc, SSL* &ssl,SSL_CTX *ctx);
 void cleanup (int soc, SSL * ssl, SSL_CTX * ctx);
-
 int sendDataSSL(SSL* ssl, void* data, int len);
 int recvDataSSL(SSL* ssl, void* data, int len);
 int recvPacket(SSL * ssl);
@@ -80,6 +78,8 @@ void log_ssl();
 void showCertificate(SSL* ssl);
 SSL_CTX* initSslCtx(void);
 
+
+int initSocks5Session(int soc, char * addr, int port);
 bool socksConnect(int soc, in_addr& dest, unsigned short port);
 bool socksLogin(int soc);
 bool socksRequest(int soc, const socks5_req& req, socks5_resp& resp);

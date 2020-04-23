@@ -142,3 +142,33 @@ int recvPacket(SSL * ssl)
     }
     return 1;
 }
+
+
+int initSslSession(int soc, SSL* &ssl,SSL_CTX *ctx)
+{
+    ctx = initSslCtx();
+    ssl = SSL_new(ctx);
+    SSL_set_fd(ssl, soc);
+    if ( SSL_connect(ssl) == FAIL )
+    {
+        ERR_print_errors_fp(stderr);
+        return FAIL;
+    }
+    else
+    {
+        printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
+        showCertificate(ssl);
+        return 1;
+    }
+}
+
+void cleanup (int soc, SSL * ssl, SSL_CTX * ctx)
+{
+    SSL_shutdown(ssl);
+    SSL_free(ssl);
+    close(soc);
+    SSL_CTX_free(ctx);
+    EVP_cleanup();
+}
+
+

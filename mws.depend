@@ -6,7 +6,7 @@
 	<stdlib.h>
 	<cstring>
 
-1587579777 source:/home/kairon/Documents/socket-mws/socket.cpp
+1587614365 source:/home/kairon/Documents/socket-mws/socket.cpp
 	"mws.h"
 
 1587579095 /home/kairon/Documents/socket-mws/socket.h
@@ -24,19 +24,19 @@
 1587579777 source:/home/kairon/Documents/socket-mws/session.cpp
 	"mws.h"
 
-1587579777 source:/home/kairon/Documents/socket-mws/socks5.cpp
+1587614379 source:/home/kairon/Documents/socket-mws/socks5.cpp
 	"mws.h"
 
-1587579777 source:/home/kairon/Documents/socket-mws/main.cpp
+1587638452 source:/home/kairon/Documents/socket-mws/main.cpp
 	"mws.h"
 
-1587579777 source:/home/kairon/Documents/socket-mws/request.cpp
+1587614604 source:/home/kairon/Documents/socket-mws/request.cpp
 	"mws.h"
 
-1587579777 source:/home/kairon/Documents/socket-mws/ssl.cpp
+1587614421 source:/home/kairon/Documents/socket-mws/ssl.cpp
 	"mws.h"
 
-1587579777 /home/kairon/Documents/socket-mws/mws.h
+1587614492 /home/kairon/Documents/socket-mws/mws.h
 	<arpa/inet.h>
 	<stdio.h>
 	<sys/socket.h>

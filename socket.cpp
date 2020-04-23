@@ -45,7 +45,18 @@ int recvData(int soc, void* data, int len)
     return total;
 }
 
-
+int initSocketSession(int soc, char * addr, int port)
+{
+    struct sockaddr_in server;
+    server.sin_addr.s_addr = inet_addr(addr);
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port);
+    if (connect(soc, (struct sockaddr*) & server, sizeof(server)) < 0)
+    {
+        return FAIL;
+    }
+    return 1;
+}
 
 
 

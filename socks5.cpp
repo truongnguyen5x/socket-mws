@@ -146,3 +146,18 @@ bool socksConnect(int soc, in_addr& dest, unsigned short port)
     }
     return true;
 }
+
+
+
+int initSocks5Session(int soc, char * addr, int port)
+{
+    if (!socksLogin(soc))
+    {
+        return FAIL;
+    }
+    struct sockaddr_in sa;
+    inet_pton(AF_INET, addr, &(sa.sin_addr));
+    if (!socksConnect(soc, sa.sin_addr, port))
+        return FAIL;
+    return 1;
+}
