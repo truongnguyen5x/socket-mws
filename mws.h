@@ -86,3 +86,4 @@ bool socksRequest(int soc, const socks5_req& req, socks5_resp& resp);
 
 int connectHTTPS(SSL* ssl);
 int connectHTTP(int soc);
+int connectHTTPSAMZ(SSL* ssl);

@@ -10,11 +10,11 @@ int main()
         return FAIL;
     }
     char socks5ip[] = "192.168.3.5";
-    if (!initSocketSession(soc, socks5ip, 27540))
+    if (!initSocketSession(soc, socks5ip, 25264))
     {
         return FAIL;
     }
-    char address[] = "172.217.5.238";
+    char address[] = "23.200.154.23";
     if (!initSocks5Session(soc, address, 443))
     {
         return FAIL;
